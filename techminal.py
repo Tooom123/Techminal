@@ -24,7 +24,7 @@ FEEDS = [
     ("Hacker News", "https://hnrss.org/frontpage"),
 ]
 
-HEADER = "TECHMINAL"
+ASCII_ART_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "techminal.txt")
 
 ANSI = {
     "reset":  "\033[0m",
@@ -100,6 +100,7 @@ def fetch_feeds():
                     "title": title,
                     "summary": summary,
                     "source": source,
+                    "link": entry.get("link", ""),
                 })
         except Exception:
             continue
@@ -120,8 +121,23 @@ def pick_article(articles, shown_ids):
     return article, shown_ids
 
 
+def load_ascii_art():
+    try:
+        with open(ASCII_ART_FILE) as f:
+            return f.read().rstrip("\n")
+    except OSError:
+        return "TECHMINAL"
+
+
+def hyperlink(url, text):
+    return f"\033]8;;{url}\033\\{text}\033]8;;\033\\"
+
+
 def format_output(article):
     width = min(shutil.get_terminal_size((80, 24)).columns, 80)
+
+    ascii_art = load_ascii_art()
+    header_block = ANSI["yellow"] + ascii_art + ANSI["reset"]
 
     title_lines = textwrap.wrap(article["title"], width - 2)
     title_block = "\n".join(
@@ -142,11 +158,19 @@ def format_output(article):
     else:
         summary_block = ANSI["dim"] + "(no summary available)" + ANSI["reset"]
 
-    source_line = ANSI["gray"] + "Source: " + article["source"] + ANSI["reset"]
+    link = article.get("link", "")
+    if link:
+        source_line = (
+            ANSI["gray"] + "Source : " + article["source"] + ", "
+            + hyperlink(link, "lien")
+            + ANSI["reset"]
+        )
+    else:
+        source_line = ANSI["gray"] + "Source : " + article["source"] + ANSI["reset"]
 
     return (
         "\n"
-        + ANSI["bold"] + ANSI["yellow"] + HEADER + ANSI["reset"] + "\n"
+        + header_block + "\n"
         + "\n"
         + title_block + "\n"
         + "\n"

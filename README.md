@@ -1,6 +1,6 @@
 # Techminal
 
-Latest tech news at the top of every terminal session — clean, readable, no links.
+Latest tech news at the top of every terminal session. Clean, Readable, easy setup.
 
 ## Example output
 
