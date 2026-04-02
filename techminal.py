@@ -101,7 +101,7 @@ def fetch_feeds():
                     summary = strip_hn_metadata(strip_html(raw).strip())
                     if len(summary) > 40:
                         break
-                if not title:
+                if not title or not summary:
                     continue
                 articles.append({
                     "id": entry.get("id") or entry.get("link") or title,
@@ -184,7 +184,7 @@ def format_output(article):
         summary_lines = textwrap.wrap(summary, width - 10)[:4]
         summary_block = "\n".join(indent + ANSI["reset"] + line for line in summary_lines)
     else:
-        summary_block = indent + ANSI["dim"] + "(no summary available)" + ANSI["reset"]
+        summary_block = ""
 
     link = article.get("link", "")
     if link:
