@@ -38,6 +38,14 @@ ANSI = {
 }
 
 
+def strip_hn_metadata(text):
+    text = re.sub(r"Article URL:\s*\S+", "", text)
+    text = re.sub(r"Comments URL:\s*\S+", "", text)
+    text = re.sub(r"Points:\s*\d+", "", text)
+    text = re.sub(r"#\s*Comments:\s*\d+", "", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
 def strip_html(text):
     text = re.sub(r"<[^>]+>", "", text)
     text = re.sub(r"&amp;", "&", text)
@@ -90,7 +98,7 @@ def fetch_feeds():
                     raw = entry.get(field, "")
                     if isinstance(raw, list):
                         raw = raw[0].get("value", "") if raw else ""
-                    summary = strip_html(raw).strip()
+                    summary = strip_hn_metadata(strip_html(raw).strip())
                     if len(summary) > 40:
                         break
                 if not title:
@@ -121,12 +129,31 @@ def pick_article(articles, shown_ids):
     return article, shown_ids
 
 
+GRADIENT = [
+    "\033[38;5;51m",
+    "\033[38;5;45m",
+    "\033[38;5;39m",
+    "\033[38;5;33m",
+    "\033[38;5;27m",
+    "\033[38;5;21m",
+]
+
+
 def load_ascii_art():
     try:
         with open(ASCII_ART_FILE) as f:
-            return f.read().rstrip("\n")
+            lines = f.read().splitlines()
+        max_len = max(len(l) for l in lines) if lines else 1
+        result = []
+        for line in lines:
+            colored = ""
+            for i, ch in enumerate(line):
+                idx = min(int(i / max_len * len(GRADIENT)), len(GRADIENT) - 1)
+                colored += GRADIENT[idx] + ch
+            result.append(colored + ANSI["reset"])
+        return "\n".join(result)
     except OSError:
-        return "TECHMINAL"
+        return ANSI["cyan"] + "TECHMINAL" + ANSI["reset"]
 
 
 def hyperlink(url, text):
@@ -135,13 +162,14 @@ def hyperlink(url, text):
 
 def format_output(article):
     width = min(shutil.get_terminal_size((80, 24)).columns, 80)
+    indent = "\t"
 
-    ascii_art = load_ascii_art()
-    header_block = ANSI["yellow"] + ascii_art + ANSI["reset"]
+    header_block = load_ascii_art()
 
-    title_lines = textwrap.wrap(article["title"], width - 2)
+    title_lines = textwrap.wrap(article["title"], width - 10)
     title_block = "\n".join(
-        ANSI["bold"] + ANSI["cyan"] + line + ANSI["reset"] for line in title_lines
+        indent + ANSI["bold"] + ANSI["cyan"] + line + ANSI["reset"]
+        for line in title_lines
     )
 
     summary = article["summary"]
@@ -153,24 +181,23 @@ def format_output(article):
                 break
             trimmed += (" " if trimmed else "") + s
         summary = trimmed or summary[:320]
-        summary_lines = textwrap.wrap(summary, width - 2)[:4]
-        summary_block = "\n".join(ANSI["reset"] + line for line in summary_lines)
+        summary_lines = textwrap.wrap(summary, width - 10)[:4]
+        summary_block = "\n".join(indent + ANSI["reset"] + line for line in summary_lines)
     else:
-        summary_block = ANSI["dim"] + "(no summary available)" + ANSI["reset"]
+        summary_block = indent + ANSI["dim"] + "(no summary available)" + ANSI["reset"]
 
     link = article.get("link", "")
     if link:
         source_line = (
-            ANSI["gray"] + "Source : " + article["source"] + ", "
+            indent + ANSI["gray"] + "Source : " + article["source"] + ", "
             + hyperlink(link, "lien")
             + ANSI["reset"]
         )
     else:
-        source_line = ANSI["gray"] + "Source : " + article["source"] + ANSI["reset"]
+        source_line = indent + ANSI["gray"] + "Source : " + article["source"] + ANSI["reset"]
 
     return (
-        "\n"
-        + header_block + "\n"
+        header_block + "\n"
         + "\n"
         + title_block + "\n"
         + "\n"
