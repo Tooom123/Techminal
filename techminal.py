@@ -190,7 +190,7 @@ def format_output(article):
     if link:
         source_line = (
             indent + ANSI["gray"] + "Source : " + article["source"] + ", "
-            + hyperlink(link, "lien")
+            + hyperlink(link, "link")
             + ANSI["reset"]
         )
     else:

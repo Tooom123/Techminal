@@ -13,7 +13,7 @@ Latest tech news at the top of every terminal session. Clean, readable, easy set
     The security update protects a raft of older iPhones and iPads from
     attacks linked to leaked hacking tools called DarkSword.
 
-    Source : TechCrunch, lien
+    Source : TechCrunch, <ins>link</ins>
 ```
 
 The source link is clickable in terminals that support OSC 8 hyperlinks (VSCode, GNOME Terminal, iTerm2, Windows Terminal).
